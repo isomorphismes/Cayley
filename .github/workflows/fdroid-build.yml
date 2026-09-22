@@ -53,9 +53,13 @@ jobs:
           java-version: '17'
 
       - uses: android-actions/setup-android@v3
+        with:
+          # The action's historical default includes the retired SDK `tools`
+          # package. Install only the inputs this build actually needs below.
+          packages: ''
 
       - name: Install Android build inputs
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - uses: gradle/actions/setup-gradle@v4
         with:
