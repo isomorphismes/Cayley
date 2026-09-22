@@ -56,3 +56,6 @@ If you have a request for particular groups you'd like to see added:  On the one
 ## Cayley fork
 
 This repository also contains the Cayley Android distribution and 2026 symmetry-pattern modifications. Except where a file carries a separate license notice, those fork modifications are distributed under GNU LGPL version 3 only, the same license as the inherited Group Explorer code. See `NOTICE.md`, `COPYING.LESSER`, and `COPYING` for provenance and license details.
+
+The current Android architecture and the disposition of the earlier mobile
+experiments are recorded in [`docs/android-direction.md`](docs/android-direction.md).

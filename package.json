@@ -4,7 +4,7 @@
   "description": "Group theory visualization application for the web",
   "main": "index.js",
   "scripts": {
-    "test": "node tests/pattern.test.mjs"
+    "test": "node tests/pattern.test.mjs && node tests/mobile-first-paint.test.mjs"
   },
   "keywords": [
     "mathematics",
