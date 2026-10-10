@@ -1,8 +1,15 @@
 import assert from 'node:assert/strict'
 import {readFile} from 'node:fs/promises'
 
-const source = await readFile(new URL('../MobileGroup.js', import.meta.url), 'utf8')
-const {default: MobileGroup} = await import('data:text/javascript,' + encodeURIComponent(source))
+function moduleURL (source) {
+  return `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
+}
+
+const structureSource = await readFile(new URL('../js/GroupStructure.js', import.meta.url), 'utf8')
+const structureURL = moduleURL(structureSource)
+const mobileGroupSource = (await readFile(new URL('../MobileGroup.js', import.meta.url), 'utf8'))
+  .replace("'./js/GroupStructure.js'", JSON.stringify(structureURL))
+const {default: MobileGroup} = await import(moduleURL(mobileGroupSource))
 
 const fixture = `<group>
 <multtable>
@@ -31,11 +38,18 @@ for (const row of group.elements) {
 assert.equal(group._rows.filter(Boolean).length, 4)
 
 const mobile = await readFile(new URL('../Mobile.js', import.meta.url), 'utf8')
+const table = await readFile(new URL('../MobileTable.js', import.meta.url), 'utf8')
 const html = await readFile(new URL('../Mobile.html', import.meta.url), 'utf8')
 
 for (const forbidden of ["./js/Library.js", "./js/XMLGroup.js", "./js/CayleyDiagramView.js", "./js/MulttableView.js", 'toDataURL']) {
   assert.equal(mobile.includes(forbidden), false)
 }
 assert.equal(html.toLowerCase().includes('jquery'), false)
-assert.ok(mobile.indexOf('createCayleyCanvas(group, size)') < mobile.indexOf('await afterPaint()'))
+assert.match(mobile, /cayleyGraphForGroup\(group\)/)
+assert.equal(mobile.includes('group.mult(generator, element)'), false,
+  'mobile renderer must consume graph structure rather than rebuild it')
+assert.match(table, /multiplicationTableForGroup\(group\)/)
+assert.equal(table.includes('group.mult(row, column)'), false,
+  'table renderer must consume table structure rather than rebuild it')
+assert.ok(mobile.indexOf('createCayleyCanvas(graph, size)') < mobile.indexOf('await afterPaint()'))
 assert.ok(mobile.indexOf('await afterPaint()') < mobile.indexOf("await import('./MobileTable.js')"))
