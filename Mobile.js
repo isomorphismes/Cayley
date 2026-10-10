@@ -1,5 +1,6 @@
 import GroupURLs from './GroupURLs.js'
 import MobileGroup from './MobileGroup.js'
+import {cayleyGraphForGroup} from './js/GroupStructure.js'
 
 const cayley_slot = document.querySelector('#cayley')
 const table_slot = document.querySelector('#multtable')
@@ -70,7 +71,7 @@ function drawArrowhead (context, start, end, node_radius) {
   context.fill()
 }
 
-function createCayleyCanvas (group, size) {
+function createCayleyCanvas (graph, size) {
   const canvas = document.createElement('canvas')
   canvas.width = size
   canvas.height = size
@@ -78,42 +79,42 @@ function createCayleyCanvas (group, size) {
   canvas.setAttribute('aria-label', 'Cayley diagram')
 
   const context = canvas.getContext('2d')
-  const positions = positionsOnCircle(group.order, size)
-  const node_radius = Math.max(3, Math.min(10, 34 / Math.sqrt(group.order)))
-  const generators = group.generators[0]
+  const positions = positionsOnCircle(graph.order, size)
+  const node_radius = Math.max(3, Math.min(10, 34 / Math.sqrt(graph.order)))
 
   context.fillStyle = '#fff'
   context.fillRect(0, 0, size, size)
-  context.lineWidth = Math.max(1, Math.min(3, 14 / Math.sqrt(group.order)))
+  context.lineWidth = Math.max(1, Math.min(3, 14 / Math.sqrt(graph.order)))
 
-  generators.forEach((generator, generator_index) => {
-    const involution = group.mult(generator, generator) === 0
-    context.strokeStyle = `hsl(${Math.round(360 * generator_index / Math.max(1, generators.length))}, 72%, 42%)`
+  graph.generators.forEach((generator, generator_index) => {
+    context.strokeStyle = `hsl(${Math.round(360 * generator_index / Math.max(1, graph.generators.length))}, 72%, 42%)`
     context.fillStyle = context.strokeStyle
 
-    group.elements.forEach((element) => {
-      const product = group.mult(generator, element)
-      if (product === element || (involution && element > product)) return
+    graph.edges
+      .filter((edge) => edge.generatorIndex === generator_index)
+      .forEach((edge) => {
+        // Loop omission and involution coalescing are renderer policy, not graph structure.
+        if (edge.to === edge.from || (generator.involution && edge.from > edge.to)) return
 
-      const start = positions[element]
-      const end = positions[product]
-      context.beginPath()
-      context.moveTo(start.x, start.y)
-      context.lineTo(end.x, end.y)
-      context.stroke()
+        const start = positions[edge.from]
+        const end = positions[edge.to]
+        context.beginPath()
+        context.moveTo(start.x, start.y)
+        context.lineTo(end.x, end.y)
+        context.stroke()
 
-      if (!involution) {
-        drawArrowhead(context, start, end, node_radius)
-      }
-    })
+        if (!generator.involution) {
+          drawArrowhead(context, start, end, node_radius)
+        }
+      })
   })
 
   context.lineWidth = 1.5
-  group.elements.forEach((element) => {
+  graph.elements.forEach((element) => {
     const point = positions[element]
     context.beginPath()
     context.arc(point.x, point.y, node_radius, 0, 2 * Math.PI)
-    context.fillStyle = element === 0 ? '#222' : '#fff'
+    context.fillStyle = element === graph.identity ? '#222' : '#fff'
     context.fill()
     context.strokeStyle = '#222'
     context.stroke()
@@ -135,10 +136,11 @@ async function showRandomGroup () {
   try {
     // Fetch one bundled file; numeric row parsing stays lazy.
     const group = await loadGroup(randomURL())
+    const graph = cayleyGraphForGroup(group)
     const size = displaySize()
 
     // Deliberately small first-paint renderer: no legacy model/view modules or table code.
-    cayley_slot.replaceChildren(createCayleyCanvas(group, size))
+    cayley_slot.replaceChildren(createCayleyCanvas(graph, size))
 
     // Do not build the multiplication table until the Cayley diagram has reached a paint.
     await afterPaint()

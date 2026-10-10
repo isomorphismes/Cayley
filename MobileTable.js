@@ -1,4 +1,7 @@
+import {multiplicationTableForGroup} from './js/GroupStructure.js'
+
 export function createMulttableCanvas (group, size) {
+  const table = multiplicationTableForGroup(group)
   const canvas = document.createElement('canvas')
   canvas.width = size
   canvas.height = size
@@ -6,18 +9,18 @@ export function createMulttableCanvas (group, size) {
   canvas.setAttribute('aria-label', 'Multiplication table')
 
   const context = canvas.getContext('2d')
-  const edge = (index) => Math.round(size * index / group.order)
-  const colors = group.elements.map(
-    (element) => `hsl(${Math.round(360 * element / group.order)}, 70%, 68%)`
+  const edge = (index) => Math.round(size * index / table.order)
+  const colors = table.elements.map(
+    (element) => `hsl(${Math.round(360 * element / table.order)}, 70%, 68%)`
   )
 
-  for (let row = 0; row < group.order; row++) {
-    for (let column = 0; column < group.order; column++) {
+  for (let row = 0; row < table.order; row++) {
+    for (let column = 0; column < table.order; column++) {
       const left = edge(column)
       const top = edge(row)
       const right = edge(column + 1)
       const bottom = edge(row + 1)
-      context.fillStyle = colors[group.mult(row, column)]
+      context.fillStyle = colors[table.rows[row][column]]
       context.fillRect(left, top, right - left, bottom - top)
     }
   }

@@ -59,3 +59,5 @@ This repository also contains the Cayley Android distribution and 2026 symmetry-
 
 The current Android architecture and the disposition of the earlier mobile
 experiments are recorded in [`docs/android-direction.md`](docs/android-direction.md).
+The reusable finite-group and representation boundary is recorded in
+[`docs/display-neutral-structure.md`](docs/display-neutral-structure.md).

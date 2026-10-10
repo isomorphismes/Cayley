@@ -1,13 +1,24 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 
-async function importSource (relative_path) {
-    const source = await readFile(new URL(relative_path, import.meta.url), 'utf8');
-    return import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+function moduleURL (source) {
+    return `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
 }
 
+async function importSource (relative_path, replacements = []) {
+    let source = await readFile(new URL(relative_path, import.meta.url), 'utf8');
+    replacements.forEach(([from, to]) => {
+        source = source.replaceAll(from, to);
+    });
+    return import(moduleURL(source));
+}
+
+const structureSource = await readFile(new URL('../js/GroupStructure.js', import.meta.url), 'utf8');
+const structureURL = moduleURL(structureSource);
 const Pattern = await importSource('../js/PatternLanguage.js');
-const GroupPattern = await importSource('../js/GroupPattern.js');
+const GroupPattern = await importSource('../js/GroupPattern.js', [
+    ["'./GroupStructure.js'", JSON.stringify(structureURL)],
+]);
 
 class FakeElement {
     constructor (namespaceURI, localName) {
@@ -51,7 +62,7 @@ function assertMatrixClose (actual, expected, epsilon = 1e-6) {
     assert.equal(actual.length, expected.length);
     actual.forEach((entry, index) => {
         assert.ok(Math.abs(entry - expected[index]) < epsilon,
-            `matrix entry ${index}: expected ${expected[index]}, got ${entry}`);
+            `matrix entry ${index}: expected ${expected[index]}, got ${entry[index]}`);
     });
 }
 
