@@ -1,7 +1,6 @@
 package org.isomorphisms.groupexplorer;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
@@ -29,7 +28,7 @@ public final class MainActivity extends Activity {
         super.onCreate(saved_instance_state);
 
         web_view = new WebView(this);
-        web_view.setBackgroundColor(Color.WHITE);
+        web_view.setBackgroundColor(getColor(R.color.charcoal_background));
         setContentView(web_view);
 
         WebSettings settings = web_view.getSettings();

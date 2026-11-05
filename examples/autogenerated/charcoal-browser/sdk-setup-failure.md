@@ -1,0 +1,3 @@
+# Preserved Android setup failure
+
+Run42031230058 passed the current group/pattern/lazy-first-paint checks, then android-actions/setup-android's historical default attempted the retired SDK package tools. The already-working F-Droid lane in this repository explicitly excludes that package. The compatibility debug lane now declares only platform-tools, Android35 and build-tools35.0.0, preserving compile/target SDK, Java17, Gradle8.10.2 and application code. The original default-bearing workflow is retained. Existing actions are pinned to observed official revisions; the Gradle v4 annotated tag was dereferenced to ed408507eac070d1f99cc633dbcf757c94c7933a. No compiler or SDK version substitution is used.

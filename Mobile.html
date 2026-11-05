@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Cayley</title>
     <style>
+        :root { color-scheme: dark; }
         * { box-sizing: border-box; }
-        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
+        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #212121; color: #F4F4F4; }
         body { font-family: system-ui, sans-serif; }
         main {
             width: 100vw;
@@ -21,7 +22,7 @@
             place-items: center;
             overflow: hidden;
         }
-        .view + .view { border-top: 1px solid #ddd; }
+        .view + .view { border-top: 1px solid #454545; }
         .view canvas {
             display: block;
             max-width: 100%;
@@ -37,18 +38,21 @@
             height: 52px;
             border: 0;
             border-radius: 50%;
-            background: rgba(255,255,255,.88);
-            color: #111;
+            background: #383838;
+            color: #F4F4F4;
             box-shadow: 0 2px 12px rgba(0,0,0,.22);
             font: 28px/1 system-ui, sans-serif;
         }
+        #again:disabled { color: #858585; }
+        #again:focus-visible { outline: 3px solid #B4B4B4; outline-offset: 3px; }
+        ::selection { background: #595959; color: #F4F4F4; }
         #error {
             position: fixed;
             inset: 0;
             display: none;
             padding: 24px;
-            background: white;
-            color: #900;
+            background: #212121;
+            color: #FFB4AB;
             white-space: pre-wrap;
         }
     </style>

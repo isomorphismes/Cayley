@@ -1,0 +1,137 @@
+"""Real bundled groups and pattern output, preceding pixels and charcoal chrome."""
+from pathlib import Path
+from builtins import ValueError, bool, str, int, object, list
+import hashlib
+import http.server
+import functools
+import threading
+import json
+from playwright.sync_api import sync_playwright
+
+def as_text(value ∈ object) → str:
+    return str(value)
+
+def require(condition ∈ bool, reason ∈ str) → None:
+    if not condition:
+        raise ValueError(reason)
+
+def root_is_charcoal(page ∈ object) → bool:
+    return bool(page.evaluate("getComputedStyle(document.body).backgroundColor === 'rgb(33, 33, 33)' && getComputedStyle(document.body).color === 'rgb(244, 244, 244)' && getComputedStyle(document.documentElement).colorScheme === 'dark'"))
+
+def canvas_pixels(page ∈ object) → str:
+    return as_text(page.locator("canvas").evaluate_all("(nodes) => nodes.map(c => c.toDataURL()).join('\\n')"))
+
+def own_text_aa(page ∈ object, selector ∈ str) → bool:
+    return bool(page.locator(selector).evaluate("""e => {
+      const lum = color => {
+        const c = color.match(/[0-9.]+/g).slice(0,3).map(Number).map(x => x/255).map(x => x<=.04045 ? x/12.92 : ((x+.055)/1.055)**2.4);
+        return c[0]*.2126+c[1]*.7152+c[2]*.0722;
+      };
+      const s=getComputedStyle(e), a=lum(s.color), b=lum(s.backgroundColor);
+      return (Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5;
+    }"""))
+
+def observe_loading(route ∈ object) → None:
+    page ∈ object ← route.request.frame.page
+    require(root_is_charcoal(page), "ACTUAL-FETCH-LOADING-CHARCOAL")
+    require(bool(page.locator("#again").is_disabled()), "ACTUAL-FETCH-LOADING-DISABLED")
+    require(as_text(page.locator("#again").evaluate("e => getComputedStyle(e).color")) == "rgb(133, 133, 133)", "LOADING-DISABLED-INK")
+    route.continue_()
+
+def fail_group(route ∈ object) → None:
+    route.fulfill(status=503, content_type="text/plain", body="Declared unavailable bundled-group test")
+
+root ∈ Path ← Path.cwd()
+output ∈ Path ← root.joinpath("build/charcoal")
+output.mkdir(parents=True, exist_ok=True)
+for name in ["Mobile.js", "MobileGroup.js", "MobileTable.js", "GroupURLs.js", "Pattern.js", "js/GroupStructure.js", "js/PatternLanguage.js", "js/GroupPattern.js"]:
+    current ∈ bytes ← root.joinpath(name).read_bytes()
+    preceding ∈ bytes ← root.joinpath(".baseline", name).read_bytes()
+    require(current == preceding, "SCIENTIFIC-AND-INTERACTION-SOURCE-UNCHANGED-" + name)
+require(root.joinpath("visualizerFramework/visualizer.css").is_symlink(), "LITERATE-CSS-SYMLINK-PRESERVED")
+handler ∈ object ← functools.partial(http.server.SimpleHTTPRequestHandler, directory=as_text(root))
+server ∈ object ← http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+worker ∈ object ← threading.Thread(target=server.serve_forever, daemon=True)
+worker.start()
+address_parts ∈ tuple[str, int] ← server.server_address
+address ∈ str ← "http://127.0.0.1:" + as_text(address_parts[1])
+driver ∈ object ← sync_playwright().start()
+browser ∈ object ← driver.chromium.launch()
+try:
+    for scheme in ["light", "dark"]:
+        for width in [390, 1280]:
+            prefix ∈ str ← as_text(width) + "-" + scheme
+            context ∈ object ← browser.new_context(color_scheme=scheme, viewport={"width": width, "height": 900})
+            # Test-only determinism selects actual unchanged catalog entries Z_5 then S_3.
+            context.add_init_script("let charcoalGroupChoice=5; crypto.getRandomValues=(array)=>{array[0]=charcoalGroupChoice++; return array;};")
+            page ∈ object ← context.new_page()
+            baseline ∈ object ← context.new_page()
+            page.route("**/groups/*.group", observe_loading)
+            page.goto(address + "/Mobile.html", wait_until="domcontentloaded")
+            baseline.goto(address + "/.baseline/Mobile.html", wait_until="domcontentloaded")
+            for candidate in [page, baseline]:
+                candidate.wait_for_function("document.querySelectorAll('canvas').length===2 && !document.querySelector('#again').disabled")
+            require(root_is_charcoal(page), "MOBILE-ROOT")
+            require(own_text_aa(page, "#again"), "AGAIN-TEXT-AA")
+            require(canvas_pixels(page) == canvas_pixels(baseline), "Z5-EXACT-PRECEDING-PIXELS")
+            require(bool(page.evaluate("""() => {
+              const groups=performance.getEntriesByType('resource').filter(e=>e.name.endsWith('.group'));
+              return groups.length===1 && groups[0].name.endsWith('/groups/Z_5.group');
+            }""")), "ONE-ACTUAL-Z5-FETCH-NO-CATALOG-LOAD")
+            page.screenshot(path=as_text(output.joinpath(prefix + "-mobile.png")))
+            for candidate in [page, baseline]:
+                candidate.locator("#again").click()
+                candidate.wait_for_function("document.querySelectorAll('canvas').length===2 && !document.querySelector('#again').disabled")
+            require(canvas_pixels(page) == canvas_pixels(baseline), "S3-EXACT-PRECEDING-PIXELS")
+            require(bool(page.evaluate("""() => {
+              const groups=performance.getEntriesByType('resource').filter(e=>e.name.endsWith('.group'));
+              return groups.length===2 && groups[1].name.endsWith('/groups/S_3.group');
+            }""")), "ONE-ADDITIONAL-ACTUAL-S3-FETCH")
+            page.keyboard.press("Tab")
+            page.locator("#again").focus()
+            require(as_text(page.locator("#again").evaluate("e=>getComputedStyle(e).outlineColor")) == "rgb(180, 180, 180)", "ACTUAL-KEYBOARD-FOCUS-INK")
+            require(as_text(page.locator("#again").evaluate("e=>getComputedStyle(e).outlineWidth")) == "3px", "ACTUAL-KEYBOARD-FOCUS-WIDTH")
+            page.screenshot(path=as_text(output.joinpath(prefix + "-another-and-focus.png")))
+            page.route("**/groups/*.group", fail_group)
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_function("getComputedStyle(document.querySelector('#error')).display==='block'")
+            require(root_is_charcoal(page), "FETCH-ERROR-ROOT")
+            require(as_text(page.locator("#error").evaluate("e=>getComputedStyle(e).backgroundColor")) == "rgb(33, 33, 33)", "FETCH-ERROR-SURFACE")
+            require(as_text(page.locator("#error").evaluate("e=>getComputedStyle(e).color")) == "rgb(255, 180, 171)", "FETCH-ERROR-INK")
+            require(own_text_aa(page, "#error"), "FETCH-ERROR-AA")
+            require("HTTP 503" in as_text(page.locator("#error").inner_text()), "ACTUAL-FAILED-FETCH-REPORTED")
+            page.screenshot(path=as_text(output.joinpath(prefix + "-fetch-error.png")))
+            page.unroute("**/groups/*.group")
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_function("document.querySelectorAll('canvas').length===2 && !document.querySelector('#again').disabled")
+            require(root_is_charcoal(page), "MOBILE-REOPEN")
+            page.evaluate("document.body.style.backgroundColor='white'")
+            require(not root_is_charcoal(page), "ACTUAL-WHITE-ROOT-MUTANT-REJECTED")
+            page.goto(address + "/Pattern.html", wait_until="domcontentloaded")
+            baseline.goto(address + "/.baseline/Pattern.html", wait_until="domcontentloaded")
+            for candidate in [page, baseline]:
+                candidate.wait_for_function("document.querySelector('#status').textContent.includes('visible copies')")
+            require(root_is_charcoal(page), "PATTERN-ROOT")
+            require(own_text_aa(page, "#source"), "SOURCE-AA")
+            require(own_text_aa(page, "#render"), "RENDER-AA")
+            require(as_text(page.locator("#pattern").inner_html()) == as_text(baseline.locator("#pattern").inner_html()), "ACTUAL-PATTERN-SVG-UNCHANGED")
+            original_source ∈ str ← as_text(page.locator("#source").input_value())
+            page.locator("#source").fill("invalid pattern λğ✓")
+            page.locator("#render").click()
+            page.wait_for_function("document.querySelector('#status').classList.contains('error')")
+            require(as_text(page.locator("#source").input_value()) == "invalid pattern λğ✓", "UNICODE-INPUT-PRESERVED")
+            require(as_text(page.locator("#status").evaluate("e=>getComputedStyle(e).color")) == "rgb(255, 180, 171)", "ACTUAL-PARSER-ERROR-INK")
+            page.screenshot(path=as_text(output.joinpath(prefix + "-pattern-error.png")), full_page=True)
+            page.locator("#source").fill(original_source)
+            page.locator("#render").click()
+            page.wait_for_function("!document.querySelector('#status').classList.contains('error')")
+            require(as_text(page.locator("#pattern").inner_html()) == as_text(baseline.locator("#pattern").inner_html()), "PATTERN-RESTORE-UNCHANGED")
+            page.screenshot(path=as_text(output.joinpath(prefix + "-pattern.png")), full_page=True)
+            context.close()
+    report ∈ str ← json.dumps({"mobile_and_pattern": "PASS", "both_system_schemes": "PASS", "phone_and_desktop": "PASS", "actual_Z5_and_S3_preceding_canvas_pixels": "PASS", "actual_pattern_svg": "PASS", "actual_loading_error_and_reopen": "PASS", "unicode_input": "PASS", "ordinary_control_text_AA": "PASS", "white_root_negative": "PASS", "legacy_desktop_interaction": "NOT_RUN", "native_Idric_product": "NOT_IMPLEMENTED", "Android_29_34": "NOT_RUN", "physical_C67": "NOT_RUN"}, sort_keys=True, indent=2)
+    output.joinpath("receipt.json").write_text(report + "\n", encoding="utf-8")
+    print(report)
+finally:
+    browser.close()
+    driver.stop()
+    server.shutdown()

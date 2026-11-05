@@ -1,0 +1,3 @@
+# Preserved observer failure
+
+The inherited APK workflow failed run42030929115 before compilation because it searched for createCayleyCanvas(group, size). The current unchanged Mobile.js actually passes graph, a display-neutral structure. The existing npm lazy-first-paint test already validates the real graph call. The APK observer now checks that exact call and still requires diagram before paint before lazy table import. No product source, ordering assertion or mathematical output is changed. The rejected workflow is retained alongside this account. The build checkout now pins the actual PR head, independently of the synthetic merge revision.
