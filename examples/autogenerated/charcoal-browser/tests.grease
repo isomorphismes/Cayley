@@ -1,0 +1,7 @@
+#!/usr/bin/env grease
+set -eu -o pipefail
+npm test
+node --check Mobile.js
+node --check MobileGroup.js
+node --check MobileTable.js
+node --check Pattern.js

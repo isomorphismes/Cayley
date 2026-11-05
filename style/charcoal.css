@@ -1,0 +1,40 @@
+/* Application chrome only. Scientific graphics, photographs and user sheets retain their colors. */
+:root { color-scheme: dark; --charcoal-background:#212121; --charcoal-surface:#2F2F2F; --charcoal-interactive:#383838; --charcoal-border:#454545; --charcoal-text:#F4F4F4; --charcoal-secondary:#B4B4B4; --charcoal-disabled:#858585; }
+body.charcoal { background:#212121; color:#F4F4F4; }
+.charcoal #header, .charcoal #controls, .charcoal #control, .charcoal #options,
+.charcoal #control-panel, .charcoal .editor-panel, .charcoal header,
+.charcoal .context-menu, .charcoal .controls-modal, .charcoal .editor,
+.charcoal #linking-indicator, .charcoal #subset_page, .charcoal #ssedit-content,
+.charcoal #ssedit-header, .charcoal .tooltip, .charcoal #tooltip,
+.charcoal .faux-select-options, .charcoal .menu, .charcoal .menu ul {
+  background:#2F2F2F !important; background-image:none !important; color:#F4F4F4 !important; border-color:#454545 !important;
+}
+.charcoal #graphic { color:#000; color-scheme:light; } /* inherited document/diagram ink */
+.charcoal #graphic .tooltip, .charcoal #graphic .context-menu, .charcoal #graphic .editor { color-scheme:dark; }
+.charcoal #controls ul, .charcoal #controls table, .charcoal #controls th,
+.charcoal #controls td, .charcoal #arrow-list, .charcoal #stored-sheet-list,
+.charcoal #defining-pair-table, .charcoal #morphism-preview-table {
+  background:#2F2F2F !important; background-image:none !important; color:#F4F4F4; border-color:#454545 !important;
+}
+.charcoal button, .charcoal input, .charcoal select, .charcoal textarea,
+.charcoal .faux-select, .charcoal .faux-select-value {
+  color-scheme:dark; background:#383838; background-image:none; color:#F4F4F4; border-color:#454545; caret-color:#F4F4F4; accent-color:#B4B4B4;
+}
+.charcoal button:disabled, .charcoal input:disabled, .charcoal select:disabled, .charcoal textarea:disabled { color:#858585; }
+.charcoal input::placeholder, .charcoal textarea::placeholder { color:#B4B4B4; opacity:1; }
+.charcoal :is(button,input,select,textarea,a,[tabindex]):focus-visible { outline:3px solid #B4B4B4; outline-offset:2px; }
+.charcoal ::selection { background:#595959; color:#F4F4F4; }
+.charcoal a, .charcoal .programLink, .charcoal #GroupTable a { color:#F4F4F4; }
+.charcoal #graphic a { color:revert; } /* links inside user-authored sheets */
+.charcoal .faux-select-arrow { border-top-color:#B4B4B4; }
+.charcoal .menu li:hover, .charcoal .faux-select-options > :hover,
+.charcoal #controls .highlighted, .charcoal #controls .emphasized,
+.charcoal #GroupTable .highlighted, .charcoal #GroupTable .emphasized { background:#383838 !important; color:#F4F4F4 !important; }
+.charcoal #GroupTable, .charcoal #GroupTable th, .charcoal #GroupTable td,
+.charcoal .w3-card, .charcoal .w3-card-4, .charcoal .w3-theme,
+.charcoal .w3-blue, .charcoal .w3-white { background:#2F2F2F !important; color:#F4F4F4 !important; border-color:#454545; }
+.charcoal .w3-button, .charcoal .gap-compute { background:#383838 !important; color:#F4F4F4 !important; }
+.charcoal .editor-panel, .charcoal #status { background:#2F2F2F; border-color:#454545; }
+.charcoal #source { background:#383838; color:#F4F4F4; }
+.charcoal #status.error { color:#FFB4AB; }
+.charcoal .preview { color:#000; color-scheme:light; } /* pattern output is content */
