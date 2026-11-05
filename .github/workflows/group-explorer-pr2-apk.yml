@@ -18,7 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - name: Test and verify mobile entry point
         run: |
           npm test
@@ -40,7 +43,7 @@ jobs:
           node <<'NODE'
           const fs = require('fs')
           const source = fs.readFileSync('Mobile.js', 'utf8')
-          const diagram = source.indexOf('createCayleyCanvas(group, size)')
+          const diagram = source.indexOf('createCayleyCanvas(graph, size)')
           const paint = source.indexOf('await afterPaint()')
           const table = source.indexOf("await import('./MobileTable.js')")
           if (!(diagram >= 0 && diagram < paint && paint < table)) process.exit(1)
